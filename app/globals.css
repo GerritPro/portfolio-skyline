@@ -1,0 +1,305 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Apple-Labs design tokens. Light is default. Dark hooks via .dark.
+   ============================================================ */
+
+:root {
+  --background: #FBFBFD;
+  --foreground: #1D1D1F;
+
+  /* Color tokens (spec) */
+  --bg-primary: #FBFBFD;
+  --bg-secondary: #FFFFFF;
+  --text-primary: #1D1D1F;
+  --text-secondary: #444446;
+  --text-tertiary: #5C5C61;
+  --price-line: #9CA3AF;
+  --divider: #D2D2D7;
+  --accent-blue: #0071E3;
+  --state-positive: #30A46C;
+  --state-negative: #E5484D;
+  --chart-neutral: #86868B;
+
+  /* Soft / derived */
+  --accent-blue-soft: rgba(0, 113, 227, 0.10);
+  --accent-blue-hover: #0077ED;
+  --state-positive-soft: rgba(48, 164, 108, 0.12);
+  --state-negative-soft: rgba(229, 72, 77, 0.10);
+  --hairline-soft: rgba(0, 0, 0, 0.08);
+  --hairline-faint: rgba(0, 0, 0, 0.04);
+  --bg-card-soft: #F5F5F7;
+
+  /* Elevation */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
+  --shadow-elevated: 0 2px 4px rgba(0, 0, 0, 0.06), 0 12px 32px rgba(0, 0, 0, 0.08);
+
+  /* Easing — strong curves; the CSS built-ins are too weak.
+     See lib/motion.ts for the JS-side equivalents. */
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+
+  /* Back-compat aliases used by older components.
+     Keep until those components are fully migrated. */
+  --bg-app: var(--bg-primary);
+  --bg-card: var(--bg-secondary);
+  --bg-elevated: var(--bg-secondary);
+  --hairline: var(--divider);
+  --accent: var(--accent-blue);
+  --accent-hover: var(--accent-blue-hover);
+  --accent-soft: var(--accent-blue-soft);
+  --positive: var(--state-positive);
+  --positive-soft: var(--state-positive-soft);
+  --negative: var(--state-negative);
+  --negative-soft: var(--state-negative-soft);
+  --warning: #F59E0B;
+}
+
+.dark {
+  --bg-primary: #1D1D1F;
+  --bg-secondary: #2D2D2F;
+  --text-primary: #F5F5F7;
+  --text-secondary: #D1D1D6;
+  --text-tertiary: #98989D;
+  --price-line: #6B7280;
+  --divider: #3A3A3C;
+  --hairline-soft: rgba(255, 255, 255, 0.08);
+  --hairline-faint: rgba(255, 255, 255, 0.04);
+  --bg-card-soft: #2A2A2C;
+  --accent-blue-soft: rgba(0, 113, 227, 0.22);
+  --state-positive-soft: rgba(48, 164, 108, 0.22);
+  --state-negative-soft: rgba(229, 72, 77, 0.22);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
+  --shadow-elevated: 0 2px 4px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+
+:root {
+  color-scheme: light;
+}
+
+/* ============================================================
+   Tailwind v4 theme bridge.
+   Both spec names and back-compat shorter names are exposed.
+   ============================================================ */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /* Spec names */
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-divider: var(--divider);
+  --color-accent-blue: var(--accent-blue);
+  --color-state-positive: var(--state-positive);
+  --color-state-negative: var(--state-negative);
+  --color-chart-neutral: var(--chart-neutral);
+
+  /* Back-compat short aliases (existing components) */
+  --color-bg: var(--bg-primary);
+  --color-bg-card: var(--bg-secondary);
+  --color-bg-soft: var(--bg-card-soft);
+  --color-hairline: var(--divider);
+  --color-accent: var(--accent-blue);
+  --color-positive: var(--state-positive);
+  --color-negative: var(--state-negative);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ============================================================
+   Globals — Apple font stack first, system numerics.
+   ============================================================ */
+
+html,
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+body {
+  font-family:
+    var(--font-geist-sans),
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Text",
+    system-ui,
+    sans-serif;
+  /* Geist features: tnum (tabular figures), ss03 (disambiguated zero),
+     cv11 (single-storey a), ss02 (alternate g), zero (slashed 0 backup). */
+  font-feature-settings: "tnum", "ss03", "cv11", "ss02", "kern";
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  min-height: 100vh;
+}
+
+/* ============================================================
+   Surface utilities. Kept identical so card borders survive.
+   ============================================================ */
+
+.surface-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--hairline-soft);
+  border-radius: 14px;
+  box-shadow: var(--shadow-card);
+}
+
+.surface-soft {
+  background: var(--bg-card-soft);
+  border: 1px solid var(--hairline-soft);
+  border-radius: 14px;
+}
+
+.surface-elevated {
+  background: var(--bg-secondary);
+  border: 1px solid var(--hairline-soft);
+  border-radius: 14px;
+  box-shadow: var(--shadow-elevated);
+}
+
+.divider-hairline {
+  border-color: var(--hairline-soft);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum", "ss03", "kern";
+}
+
+/* Force the mono partner — useful inside Recharts axes, code samples,
+   table cells where we want monospaced digits regardless of context. */
+.font-mono {
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, "SF Mono",
+    Menlo, Consolas, monospace;
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.22);
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+   Typography scale (Apple-Labs hierarchy).
+   ============================================================ */
+
+.display-xl {
+  font-size: 96px;
+  font-weight: 200;
+  letter-spacing: -0.02em;
+  line-height: 1.04;
+  color: var(--text-primary);
+}
+
+.display-lg {
+  font-size: 64px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1.06;
+  color: var(--text-primary);
+}
+
+.display-md {
+  font-size: 40px;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  line-height: 1.10;
+  color: var(--text-primary);
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  line-height: 1.25;
+  color: var(--text-primary);
+}
+
+.body {
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.caption {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* Non-uppercase footnote (e.g., counts under hero numbers). */
+.footnote {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  line-height: 1.35;
+}
+
+/* ============================================================
+   Deprecated typography classes — kept as aliases so that any
+   missed call-site does not visually break. To be removed in a
+   future cleanup pass.
+   ============================================================ */
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.headline-xl { font-size: 40px; font-weight: 300; letter-spacing: -0.01em; line-height: 1.10; color: var(--text-primary); }
+.headline-l  { font-size: 28px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.14; color: var(--text-primary); }
+.headline-m  { font-size: 24px; font-weight: 500; letter-spacing: -0.005em; line-height: 1.25; color: var(--text-primary); }
+.number-xl   { font-size: 40px; font-weight: 300; letter-spacing: -0.01em; line-height: 1.10; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.number-l    { font-size: 24px; font-weight: 500; letter-spacing: -0.005em; line-height: 1.25; font-variant-numeric: tabular-nums; }
+.body-m      { font-size: 17px; font-weight: 400; line-height: 1.5; color: var(--text-primary); }
+.body-s      { font-size: 14px; font-weight: 400; line-height: 1.4; color: var(--text-secondary); }

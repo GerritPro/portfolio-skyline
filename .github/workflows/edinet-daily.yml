@@ -1,0 +1,53 @@
+name: EDINET daily (Japan)
+
+on:
+  schedule:
+    # 01:00 UTC daily = 10:00 JST, after the previous day's filings post.
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-pipeline
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    env:
+      EDINET_API_KEY: ${{ secrets.EDINET_API_KEY }}
+      # ^ register a free subscription key at https://disclosure.edinet-fsa.go.jp/
+      # and add it under repository Secrets. Without it the workflow is a no-op.
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Sync dependencies
+        run: uv sync
+
+      - name: Run EDINET daily
+        # Checks today's + yesterday's filings, filters to Japan tickers in
+        # the universe, logs matches. Stamps last_update.japan.
+        run: uv run python -m pipeline.edinet_daily
+
+      - name: Commit update stamp
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [[ -n "$(git status --porcelain public/data/last_update.json)" ]]; then
+            git add public/data/last_update.json
+            git commit -m "data: edinet check $(date -u +'%Y-%m-%d')"
+            git push
+          fi

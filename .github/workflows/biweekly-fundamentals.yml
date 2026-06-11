@@ -1,0 +1,66 @@
+name: Biweekly fundamentals
+
+on:
+  schedule:
+    # 23:00 UTC on the 1st and 15th of each month. Aligned to earnings
+    # seasons (mid-Jan Q4, early May Q1, early Aug Q2, early Nov Q3) so the
+    # first run after each season picks up the new filings.
+    - cron: "0 23 1,15 * *"
+  workflow_dispatch:
+    inputs:
+      full:
+        description: "Bypass change-detection and refetch everything"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-pipeline
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    env:
+      FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
+      DATA_PROVIDER: hybrid
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Sync dependencies
+        run: uv sync
+
+      - name: Run biweekly fundamentals
+        # Smart change-detection via SEC submissions API:
+        # only tickers with a new 10-K/10-Q since last run get pulled.
+        run: |
+          if [[ "${{ inputs.full }}" == "true" ]]; then
+            uv run python pipeline/orchestrate.py --quarterly --quarterly-full
+          else
+            uv run python -m pipeline.biweekly_fundamentals
+          fi
+
+      - name: Commit data updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [[ -n "$(git status --porcelain public/data pipeline/.fmp_call_log.json pipeline/state)" ]]; then
+            git add public/data pipeline/.fmp_call_log.json pipeline/state
+            git commit -m "data: fundamentals $(date -u +'%Y-%m-%d')"
+            git push
+          else
+            echo "No fundamentals changes — skipping commit."
+          fi

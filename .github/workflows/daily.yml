@@ -1,0 +1,56 @@
+name: Daily prices + derived
+
+on:
+  schedule:
+    # 22:00 UTC Mon-Fri — after US market close (16:00 ET).
+    # Markets are closed Sat-Sun; running would just refetch stale data.
+    - cron: "0 22 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-pipeline
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    env:
+      FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
+      DATA_PROVIDER: hybrid
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Sync dependencies
+        run: uv sync
+
+      - name: Run daily pipeline
+        # Prices, FX, options/GEX, insider, derived stats, dashboard prep.
+        # Does NOT touch quarterly fundamentals — that's biweekly-fundamentals.yml.
+        run: uv run python -m pipeline.daily_prices
+
+      - name: Commit data updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [[ -n "$(git status --porcelain public/data pipeline/.fmp_call_log.json)" ]]; then
+            STOCKS=$(ls -d public/data/stocks/*/ 2>/dev/null | wc -l)
+            git add public/data pipeline/.fmp_call_log.json
+            git commit -m "data: daily prices $(date -u +'%Y-%m-%d') · ${STOCKS} stocks"
+            git push
+          else
+            echo "No data changes."
+          fi

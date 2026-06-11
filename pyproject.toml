@@ -1,0 +1,32 @@
+[project]
+name = "portfolio-skyline-pipeline"
+version = "0.1.0"
+description = "Daily/quarterly market data pipeline: hybrid FMP + yfinance, static JSON output."
+requires-python = ">=3.11"
+dependencies = [
+    "yfinance>=0.2.40",
+    "requests>=2.31",
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "pydantic>=2.5",
+    "tenacity>=8.2",
+    "python-dotenv>=1.0",
+    "beautifulsoup4>=4.12",
+    "lxml>=5.0",
+    "duckdb>=1.0",
+    "ollama>=0.4",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-mock>=3.12",
+    "requests-mock>=1.12",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = [
+    "ignore::DeprecationWarning:yfinance.*",
+]
